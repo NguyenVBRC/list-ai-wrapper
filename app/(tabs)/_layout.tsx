@@ -1,43 +1,72 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
-
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Tabs } from "expo-router";
+import {
+  BookOpen,
+  Chrome as Home,
+  Settings,
+  ShoppingCart,
+} from "lucide-react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        tabBarActiveTintColor: "#FF9500",
+        tabBarInactiveTintColor: "#8E8E93",
+        tabBarStyle: {
+          elevation: 0,
+          borderTopWidth: 0,
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          shadowOffset: { width: 0, height: -3 },
+        },
+        headerStyle: {
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          shadowOffset: { width: 0, height: 1 },
+          elevation: 0,
+          borderBottomWidth: 0,
+        },
+        headerTitleStyle: {
+          fontWeight: "600",
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Search",
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          headerTitle: "Recipe Search",
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="recipes"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Recipes",
+          tabBarIcon: ({ color, size }) => (
+            <BookOpen color={color} size={size} />
+          ),
+          headerTitle: "My Recipes",
+        }}
+      />
+      <Tabs.Screen
+        name="shopping-list"
+        options={{
+          title: "Shopping",
+          tabBarIcon: ({ color, size }) => (
+            <ShoppingCart color={color} size={size} />
+          ),
+          headerTitle: "Shopping List",
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color, size }) => (
+            <Settings color={color} size={size} />
+          ),
+          headerTitle: "Settings",
         }}
       />
     </Tabs>

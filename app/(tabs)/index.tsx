@@ -1,75 +1,232 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { RecipeCard } from "@/components/RecipeCard";
+import { searchRecipes } from "@/utils/recipeApi";
+import { StatusBar } from "expo-status-bar";
+import { Search, X } from "lucide-react-native";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function SearchScreen() {
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const [error, setError] = useState("");
 
-export default function HomeScreen() {
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const results = await searchRecipes(query);
+      setRecipes(results);
+    } catch (err) {
+      setError("Failed to find recipes. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setQuery("");
+    setRecipes([]);
+    setError("");
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoid}
+      >
+        <View style={styles.searchContainer}>
+          <View style={styles.inputContainer}>
+            <Search size={20} color="#8E8E93" style={styles.searchIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Search for a recipe..."
+              value={query}
+              onChangeText={setQuery}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+              placeholderTextColor="#8E8E93"
+            />
+            {query.length > 0 && (
+              <TouchableOpacity
+                onPress={clearSearch}
+                style={styles.clearButton}
+              >
+                <X size={18} color="#8E8E93" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.searchButton}
+            onPress={handleSearch}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.searchButtonText}>Search</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF9500" />
+            <Text style={styles.loadingText}>Finding recipes...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : recipes.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyTitle}>Find your next meal</Text>
+            <Text style={styles.emptyText}>
+              Search for any dish like "cheeseburger" or "pasta" to see recipes
+              and ingredients
+            </Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.resultsContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.resultsTitle}>Results</Text>
+            {recipes.map((recipe, index) => (
+              <RecipeCard key={index} recipe={recipe} />
+            ))}
+          </ScrollView>
+        )}
+      </KeyboardAvoidingView>
+      <StatusBar style="auto" />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#F8F8F8",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  keyboardAvoid: {
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  searchContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  inputContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    fontFamily: "Poppins-Regular",
+    fontSize: 16,
+    color: "#000000",
+  },
+  clearButton: {
+    padding: 6,
+  },
+  searchButton: {
+    backgroundColor: "#FF9500",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginLeft: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#FF9500",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  searchButtonText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontFamily: "Poppins-Bold",
+    fontSize: 24,
+    color: "#333333",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  emptyText: {
+    fontFamily: "Poppins-Regular",
+    fontSize: 16,
+    color: "#666666",
+    textAlign: "center",
+    lineHeight: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontFamily: "Poppins-Medium",
+    fontSize: 16,
+    color: "#333333",
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  errorText: {
+    fontFamily: "Poppins-Medium",
+    fontSize: 16,
+    color: "#FF3B30",
+    textAlign: "center",
+  },
+  resultsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  resultsTitle: {
+    fontFamily: "Poppins-SemiBold",
+    fontSize: 20,
+    color: "#333333",
+    marginBottom: 16,
+    marginTop: 8,
   },
 });
