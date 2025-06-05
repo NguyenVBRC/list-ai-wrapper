@@ -1,6 +1,5 @@
 import { Recipe } from "@/types/recipe";
 
-// Mock recipe data
 const mockRecipes: Recipe[] = [
   {
     id: "1",
@@ -178,7 +177,7 @@ export const searchRecipes = async (query: string): Promise<Recipe[]> => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Filter recipes based on query
-  const searchTerm = query.toLowerCase();
+  const searchTerm = query.toLowerCase().trim();
   const results = mockRecipes.filter(
     (recipe) =>
       recipe.title.toLowerCase().includes(searchTerm) ||
